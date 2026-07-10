@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import api from '../../services/api'
 
 interface Employee {
   id: string
@@ -13,20 +14,28 @@ interface Employee {
   status: 'on_track' | 'completed' | 'behind'
 }
 
-// Mock Employees List
-const employees = ref<Employee[]>([
-  { id: '1', name: 'Alex Mercer', email: 'alex@company.com', department: 'Engineering', hireDate: '2026-07-01', progress: 45, level: 2, points: 120, status: 'on_track' },
-  { id: '2', name: 'Beatriz Santos', email: 'beatriz@company.com', department: 'Marketing', hireDate: '2026-07-02', progress: 100, level: 4, points: 340, status: 'completed' },
-  { id: '3', name: 'Charlie Chen', email: 'charlie@company.com', department: 'Product', hireDate: '2026-06-25', progress: 85, level: 3, points: 260, status: 'on_track' },
-  { id: '4', name: 'Diana Prince', email: 'diana@company.com', department: 'HR', hireDate: '2026-07-05', progress: 10, level: 1, points: 20, status: 'behind' },
-  { id: '5', name: 'Evan Wright', email: 'evan@company.com', department: 'Design', hireDate: '2026-07-07', progress: 5, level: 1, points: 10, status: 'on_track' }
-])
+const employees = ref<Employee[]>([])
+const isLoading = ref(true)
+
+onMounted(async () => {
+  try {
+    const response = await api.get('/admin/employees')
+    employees.value = response.data
+  } catch (e) {
+    console.error('Failed to load active hires metrics', e)
+  } finally {
+    isLoading.value = false
+  }
+})
 
 // Stats widgets calculations
-const totalHires = employees.value.length
-const avgProgress = Math.round(employees.value.reduce((acc, curr) => acc + curr.progress, 0) / totalHires)
-const completedHires = employees.value.filter(e => e.progress === 100).length
-const behindHires = employees.value.filter(e => e.status === 'behind').length
+const totalHires = computed(() => employees.value.length)
+const avgProgress = computed(() => {
+  if (employees.value.length === 0) return 0
+  return Math.round(employees.value.reduce((acc, curr) => acc + curr.progress, 0) / employees.value.length)
+})
+const completedHires = computed(() => employees.value.filter(e => e.progress === 100).length)
+const behindHires = computed(() => employees.value.filter(e => e.status === 'behind').length)
 
 function getInitials(name: string) {
   const parts = name.split(' ')

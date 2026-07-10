@@ -1,34 +1,111 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/useAuthStore'
+import api from '../../services/api'
 
 const authStore = useAuthStore()
 const router = useRouter()
 
 const userName = computed(() => authStore.user?.name || 'New Hire')
 
-// Mock progress state
-const progress = 20
-const weekLabel = 'Week 1'
+interface Task {
+  id: string
+  title: string
+  duration: string
+  type: 'video' | 'quiz' | 'pdf'
+  pts: number
+  completed: boolean
+  description: string
+}
+
+interface Module {
+  id: string
+  title: string
+  description: string
+  week: string
+  progress: number
+  tasks: Task[]
+}
+
+const modules = ref<Module[]>([])
+const isLoading = ref(true)
+
+// Fetch employee modules on mount
+onMounted(async () => {
+  try {
+    const response = await api.get('/employee/modules')
+    modules.value = response.data
+  } catch (e) {
+    console.error('Failed to load employee dashboard details', e)
+  } finally {
+    isLoading.value = false
+  }
+})
+
+// Calculate overall progress across all tasks
+const progress = computed(() => {
+  let totalTasks = 0
+  let completedTasks = 0
+  modules.value.forEach((mod) => {
+    mod.tasks.forEach((t) => {
+      totalTasks++
+      if (t.completed) {
+        completedTasks++
+      }
+    })
+  })
+  return totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
+})
+
+const weekLabel = computed(() => {
+  const nextIncomplete = nextTask.value
+  if (nextIncomplete) {
+    const parentMod = modules.value.find(mod => mod.tasks.some(t => t.id === nextIncomplete.id))
+    if (parentMod) return parentMod.week
+  }
+  return 'Week 1'
+})
 
 // Circular progress calculations
 const radius = 80
 const circumference = 2 * Math.PI * radius
 const strokeDashoffset = computed(() => {
-  return circumference - (progress / 100) * circumference
+  return circumference - (progress.value / 100) * circumference
+})
+
+// Find next task to resume onboarding
+const nextTask = computed(() => {
+  for (const mod of modules.value) {
+    for (const task of mod.tasks) {
+      if (!task.completed) {
+        return task
+      }
+    }
+  }
+  return null
 })
 
 function resumeJourney() {
-  router.push('/journey')
+  if (nextTask.value) {
+    router.push(`/task/${nextTask.value.id}`)
+  } else {
+    router.push('/journey')
+  }
 }
 
-// Mock tasks preview list
-const upcomingTasks = [
-  { id: '1', title: 'Watch Welcome Video', duration: '5 min', type: 'video', pts: 10 },
-  { id: '2', title: 'Work Environment Setup Checklist', duration: '15 min', type: 'pdf', pts: 20 },
-  { id: '3', title: 'Onboarding Quiz: Security Policies', duration: '10 min', type: 'quiz', pts: 30 }
-]
+// Show up to 3 upcoming incomplete tasks in dashboard preview
+const upcomingTasks = computed(() => {
+  const tasksList: Task[] = []
+  modules.value.forEach((mod) => {
+    mod.tasks.forEach((t) => {
+      if (!t.completed && tasksList.length < 3) {
+        tasksList.push(t)
+      }
+    })
+  })
+  return tasksList
+})
 
 function getTaskIcon(type: string) {
   if (type === 'video') return '🎬'
@@ -97,8 +174,8 @@ function handleGoToTask(taskId: string) {
       <div class="cta-card">
         <div class="cta-content">
           <div class="cta-badge">IN PROGRESS</div>
-          <h2 class="cta-title">Next up: Company Culture Deep Dive</h2>
-          <p class="cta-desc">Learn about our mission, core values, and meet the founding team in this short interactive overview.</p>
+          <h2 class="cta-title">Next up: {{ nextTask?.title || 'All Tasks Completed!' }}</h2>
+          <p class="cta-desc">{{ nextTask?.description || 'You have successfully finished all assigned onboarding modules. Great job!' }}</p>
           
           <button @click="resumeJourney" class="resume-btn">
             <span>Resume Journey</span>

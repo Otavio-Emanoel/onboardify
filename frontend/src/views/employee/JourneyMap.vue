@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import ModuleCard from '../../components/ModuleCard.vue'
+import api from '../../services/api'
 
 const router = useRouter()
 
@@ -12,6 +13,7 @@ interface Task {
   type: 'video' | 'quiz' | 'pdf'
   pts: number
   completed: boolean
+  description: string
 }
 
 interface Module {
@@ -24,60 +26,36 @@ interface Module {
   tasks: Task[]
 }
 
-// Mock Journey Modules
-const modules = ref<Module[]>([
-  {
-    id: 'mod_1',
-    title: 'Welcome & System Setup',
-    description: 'Configure your hardware, complete basic security protocols, and set up your initial communications workspace.',
-    unlocked: true,
-    progress: 100,
-    week: 'Week 1',
-    tasks: [
-      { id: '1', title: 'Watch Welcome Video', duration: '5 min', type: 'video', pts: 10, completed: true },
-      { id: '2', title: 'Environment Setup Checklist', duration: '15 min', type: 'pdf', pts: 20, completed: true }
-    ]
-  },
-  {
-    id: 'mod_2',
-    title: 'Company Culture & Values',
-    description: 'Learn about our core mission, operational frameworks, and hear from team leaders about how we collaborate.',
-    unlocked: true,
-    progress: 20,
-    week: 'Week 1',
-    tasks: [
-      { id: '3', title: 'Onboarding Quiz: Security Policies', duration: '10 min', type: 'quiz', pts: 30, completed: false },
-      { id: '4', title: 'Founder Mission Fireside Video', duration: '8 min', type: 'video', pts: 15, completed: false },
-      { id: '5', title: 'Employee Handbook Guidebook', duration: '20 min', type: 'pdf', pts: 25, completed: false }
-    ]
-  },
-  {
-    id: 'mod_3',
-    title: 'Security Compliance & IT',
-    description: 'Verify configuration of multi-factor keys, review client data safety guidelines, and complete basic training compliance tests.',
-    unlocked: false,
-    progress: 0,
-    week: 'Week 2',
-    tasks: [
-      { id: '6', title: 'GDPR Compliance Quiz', duration: '12 min', type: 'quiz', pts: 35, completed: false },
-      { id: '7', title: 'Secure Coding & IT Checklist', duration: '10 min', type: 'pdf', pts: 20, completed: false }
-    ]
-  },
-  {
-    id: 'mod_4',
-    title: 'Role Deep Dive & Tooling',
-    description: 'Gain sandbox environment keys, clone central repositories, run locally and review the architectural design charts.',
-    unlocked: false,
-    progress: 0,
-    week: 'Week 2',
-    tasks: [
-      { id: '8', title: 'Sandbox Environment Onboarding Video', duration: '15 min', type: 'video', pts: 25, completed: false },
-      { id: '9', title: 'First Local Build Checklist', duration: '30 min', type: 'pdf', pts: 50, completed: false }
-    ]
-  }
-])
+const modules = ref<Module[]>([])
+const selectedModule = ref<Module | null>(null)
+const isLoading = ref(true)
 
-const selectedModule = ref<Module | null>(modules.value[1]) // Default select module 2
+onMounted(async () => {
+  try {
+    const response = await api.get('/employee/modules')
+    const rawModules = response.data
+
+    let previousCompleted = true
+    modules.value = rawModules.map((mod: any, index: number) => {
+      const unlocked = index === 0 || previousCompleted
+      previousCompleted = mod.progress === 100
+      return {
+        ...mod,
+        unlocked
+      }
+    })
+
+    // Select the first unlocked module by default
+    const firstUnlocked = modules.value.find(m => m.unlocked)
+    if (firstUnlocked) {
+      selectedModule.value = firstUnlocked
+    }
+  } catch (e) {
+    console.error('Failed to load journey map modules', e)
+  } finally {
+    isLoading.value = false
+  }
+})
 
 function selectModule(mod: Module) {
   if (mod.unlocked) {

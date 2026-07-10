@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useAuthStore, type User } from '../../stores/useAuthStore'
+import { useAuthStore } from '../../stores/useAuthStore'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -41,30 +41,16 @@ async function handleAcceptInvite() {
   isLoading.value = true
 
   try {
-    // Simulate API request to activate account with the new password
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    // Automatically log the new hire in for seamless onboarding
-    const mockUser: User = {
-      id: 'usr_new_hire_' + Math.floor(Math.random() * 1000),
-      name: 'New Hire',
-      email: 'newhire@company.com',
-      level: 1,
-      points: 0
-    }
-    const mockToken = 'mock_jwt_token_new_hire_' + token.value
-
-    authStore.setAuth(mockUser, 'employee', mockToken)
+    await authStore.acceptInvite(password.value, confirmPassword.value)
     
     successMsg.value = 'Account activated successfully! Starting your onboarding journey...'
     
-    // Redirect to employee dashboard after 1.5s
     setTimeout(() => {
       router.push('/dashboard')
     }, 1500)
 
   } catch (error: any) {
-    errorMsg.value = error.message || 'Something went wrong. Please request a new invitation link.'
+    errorMsg.value = error.response?.data?.message || error.message || 'Something went wrong. Please request a new invitation link.'
   } finally {
     isLoading.value = false
   }

@@ -31,8 +31,8 @@ function handleLogoUpload(event: Event) {
   }
 }
 
-function saveBranding() {
-  tenantStore.setTenantConfig({
+async function saveBranding() {
+  await tenantStore.setTenantConfig({
     primaryColor: primaryColor.value,
     secondaryColor: secondaryColor.value,
     logoUrl: logoUrl.value

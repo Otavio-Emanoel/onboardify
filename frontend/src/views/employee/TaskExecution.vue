@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../stores/useAuthStore'
+import api from '../../services/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -10,6 +11,8 @@ const authStore = useAuthStore()
 const taskId = ref('')
 const isCompleted = ref(false)
 const claimSuccess = ref(false)
+const errorMsg = ref('')
+const isLoading = ref(false)
 
 // Video task simulation state
 const isPlaying = ref(false)
@@ -24,95 +27,63 @@ const isQuizCorrect = ref(false)
 const pdfPage = ref(1)
 const pdfZoom = ref(100)
 
-interface MockTask {
+interface Task {
   id: string
   title: string
   description: string
   type: 'video' | 'quiz' | 'pdf'
   pts: number
-  // Video specific properties
+  duration: string
+  completed: boolean
   videoUrl?: string
-  duration?: string
-  // Quiz specific properties
   quizQuestion?: string
   quizOptions?: string[]
   quizCorrectIndex?: number
-  // PDF specific properties
   pdfTitle?: string
   pdfContentPages?: string[]
 }
 
-const mockTasksData: Record<string, MockTask> = {
-  '1': {
-    id: '1',
-    title: 'Watch Welcome Video',
-    description: 'A message from our CEO welcoming you to the team and explaining our central vision and objectives.',
-    type: 'video',
-    pts: 10,
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-working-late-at-the-office-39794-large.mp4',
-    duration: '2:15'
-  },
-  '2': {
-    id: '2',
-    title: 'Work Environment Setup Checklist',
-    description: 'Follow this technical guide to configure your system preferences, access keys, and repositories.',
-    type: 'pdf',
-    pts: 20,
-    pdfTitle: 'developer_setup_guide_v2.pdf',
-    pdfContentPages: [
-      'Welcome to the Development Team! \n\n1. Request GitHub Access in the Slack #it-helpdesk channel.\n2. Configure your SSH keys locally and add them to your GitHub profile.\n3. Make sure to download Node.js v20+ and NPM v10+.',
-      '4. Clone the repository: git clone git@github.com:onboardify/frontend.git\n5. Run npm install to resolve project dependencies.\n6. Start the local server: npm run dev\n7. Verify access to the sandbox DB by loading /api/health.',
-      '8. Configure 2FA keys for all administrative logins.\n9. Complete your environment questionnaire in the HR portal.\n10. Notify your onboarding buddy once local compilation succeeds!'
-    ]
-  },
-  '3': {
-    id: '3',
-    title: 'Onboarding Quiz: Security Policies',
-    description: 'Test your understanding of security standards, lock policies, and social engineering warnings.',
-    type: 'quiz',
-    pts: 30,
-    quizQuestion: 'Which of the following is our standard policy regarding laptops in public spaces?',
-    quizOptions: [
-      'Laptops can be left logged-in if you are only gone for under 2 minutes.',
-      'Laptops must be screen-locked and securely tethered or stored when unattended, even briefly.',
-      'You are allowed to share passwords with colleagues over Slack without secure encryption.',
-      'Leaving your computer unlocked in the workspace is perfectly fine.'
-    ],
-    quizCorrectIndex: 1
-  }
-}
-
-const task = ref<MockTask>({
+const task = ref<Task>({
   id: 'default',
   title: 'Onboarding Checklist Task',
   description: 'Complete the listed criteria to obtain points.',
   type: 'pdf',
   pts: 10,
+  duration: '5 min',
+  completed: false,
   pdfTitle: 'checklist.pdf',
   pdfContentPages: ['Default task checklist. Please complete all standard onboarding steps.']
 })
 
-onMounted(() => {
+onMounted(async () => {
   const idStr = route.params.id as string
   taskId.value = idStr
-  
-  if (mockTasksData[idStr]) {
-    task.value = mockTasksData[idStr]
-  } else {
-    // If dynamic URL param task, default to a checklist quiz
-    task.value = {
-      id: idStr,
-      title: `Task #${idStr} Onboarding Checkpoint`,
-      description: 'Dynamic onboarding task checklist.',
-      type: 'quiz',
-      pts: 25,
-      quizQuestion: 'I confirm that I have reviewed the training materials for this checkpoint.',
-      quizOptions: [
-        'No, I need more time.',
-        'Yes, I have completed the review and am ready to proceed.'
-      ],
-      quizCorrectIndex: 1
+
+  try {
+    const response = await api.get('/employee/modules')
+    const modulesData = response.data
+
+    let foundTask: any = null
+    for (const mod of modulesData) {
+      const t = mod.tasks.find((taskItem: any) => String(taskItem.id) === idStr)
+      if (t) {
+        foundTask = t
+        break
+      }
     }
+
+    if (foundTask) {
+      task.value = foundTask
+      isCompleted.value = foundTask.completed
+      if (foundTask.completed) {
+        claimSuccess.value = true
+      }
+    } else {
+      errorMsg.value = 'Task not found in your assigned onboarding journey.'
+    }
+  } catch (e: any) {
+    console.error('Failed to load task details', e)
+    errorMsg.value = 'Failed to load task details from server.'
   }
 })
 
@@ -180,9 +151,20 @@ function zoomPdf(amount: number) {
 }
 
 // Claim points action
-function claimPoints() {
-  authStore.addPoints(task.value.pts)
-  claimSuccess.value = true
+async function claimPoints() {
+  errorMsg.value = ''
+  isLoading.value = true
+  try {
+    await api.post(`/employee/task/${task.value.id}/complete`, {
+      selected_index: selectedAnswer.value
+    })
+    authStore.addPoints(task.value.pts)
+    claimSuccess.value = true
+  } catch (error: any) {
+    errorMsg.value = error.response?.data?.error || error.response?.data?.message || error.message || 'Failed to complete task on server.'
+  } finally {
+    isLoading.value = false
+  }
 }
 
 function goBack() {

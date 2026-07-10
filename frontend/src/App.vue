@@ -1,4 +1,12 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
+import { useTenantStore } from './stores/useTenantStore'
+
+const tenantStore = useTenantStore()
+
+onMounted(() => {
+  tenantStore.fetchBranding()
+})
 </script>
 
 <template>

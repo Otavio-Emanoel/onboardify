@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore, type User, type UserRole } from '../../stores/useAuthStore'
+import { useAuthStore } from '../../stores/useAuthStore'
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -21,58 +21,20 @@ async function handleLogin() {
   isLoading.value = true
 
   try {
-    // Simulate hitting a backend API with 800ms delay
-    await new Promise((resolve) => setTimeout(resolve, 800))
+    await authStore.login(email.value, password.value)
 
-    let user: User
-    let role: UserRole
-    let token = 'mock_jwt_token_xyz'
-
-    const trimmedEmail = email.value.trim().toLowerCase()
-
-    if (trimmedEmail === 'admin@onboardify.com') {
-      role = 'admin'
-      user = {
-        id: 'usr_admin_001',
-        name: 'Jane Doe',
-        email: trimmedEmail
-      }
-    } else if (trimmedEmail === 'employee@onboardify.com' || trimmedEmail.endsWith('@employee.com')) {
-      role = 'employee'
-      user = {
-        id: 'usr_emp_101',
-        name: 'Alex Mercer',
-        email: trimmedEmail,
-        level: 1,
-        points: 120
-      }
-    } else {
-      // Default fallback for any other email for demo purposes
-      role = 'employee'
-      user = {
-        id: 'usr_emp_fallback',
-        name: email.value.split('@')[0],
-        email: trimmedEmail,
-        level: 1,
-        points: 0
-      }
-    }
-
-    // Save mock state to auth store
-    authStore.setAuth(user, role, token)
-
-    // Redirect to correct dashboard layout
-    if (role === 'admin') {
+    if (authStore.role === 'admin') {
       router.push('/admin/dashboard')
     } else {
       router.push('/dashboard')
     }
   } catch (error: any) {
-    errorMsg.value = error.message || 'Login failed. Please try again.'
+    errorMsg.value = error.response?.data?.message || error.message || 'Login failed. Please try again.'
   } finally {
     isLoading.value = false
   }
 }
+
 </script>
 
 <template>

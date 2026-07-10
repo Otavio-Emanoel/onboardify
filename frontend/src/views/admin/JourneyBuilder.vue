@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import draggable from 'vuedraggable'
+import api from '../../services/api'
 
 interface TaskActivity {
   id: string
@@ -8,27 +9,41 @@ interface TaskActivity {
   type: 'video' | 'quiz' | 'pdf'
   pts: number
   duration: string
+  description?: string
 }
 
 // Left Toolbox: Templates (Clonable)
 const availableActivities = ref<TaskActivity[]>([
-  { id: 't_1', title: '🎬 Onboarding Intro Video', type: 'video', pts: 10, duration: '5 min' },
-  { id: 't_2', title: '🎬 Founders Fireside Video', type: 'video', pts: 15, duration: '8 min' },
-  { id: 't_3', title: '❓ Security Standard Quiz', type: 'quiz', pts: 25, duration: '12 min' },
-  { id: 't_4', title: '❓ GDPR Compliance Quiz', type: 'quiz', pts: 30, duration: '15 min' },
-  { id: 't_5', title: '📄 Dev Environment Guide', type: 'pdf', pts: 20, duration: '20 min' },
-  { id: 't_6', title: '📄 Employee Code of Conduct', type: 'pdf', pts: 15, duration: '15 min' }
+  { id: 't_1', title: 'Watch Welcome Video', type: 'video', pts: 10, duration: '5 min', description: 'A welcome video from the CEO.' },
+  { id: 't_2', title: 'Environment Setup Checklist', type: 'pdf', pts: 20, duration: '15 min', description: 'Technical local machine configuration.' },
+  { id: 't_3', title: 'Onboarding Quiz: Security Policies', type: 'quiz', pts: 30, duration: '10 min', description: 'IT lock safety questionnaire.' }
 ])
 
 // Right Droppable Targets: Weeks
-const week1Tasks = ref<TaskActivity[]>([
-  { id: 'w1_1', title: '🎬 Onboarding Intro Video', type: 'video', pts: 10, duration: '5 min' },
-  { id: 'w1_2', title: '📄 Employee Code of Conduct', type: 'pdf', pts: 15, duration: '15 min' }
-])
+const week1Tasks = ref<TaskActivity[]>([])
+const week2Tasks = ref<TaskActivity[]>([])
+const isLoading = ref(true)
 
-const week2Tasks = ref<TaskActivity[]>([
-  { id: 'w2_1', title: '❓ Security Standard Quiz', type: 'quiz', pts: 25, duration: '12 min' }
-])
+onMounted(async () => {
+  try {
+    const response = await api.get('/employee/modules')
+    const modules = response.data
+    
+    const w1 = modules.find((m: any) => m.week === 'Week 1')
+    if (w1) {
+      week1Tasks.value = w1.tasks
+    }
+    
+    const w2 = modules.find((m: any) => m.week === 'Week 2')
+    if (w2) {
+      week2Tasks.value = w2.tasks
+    }
+  } catch (e) {
+    console.error('Failed to load current timeline configurations', e)
+  } finally {
+    isLoading.value = false
+  }
+})
 
 let dragIdCount = 1000
 function cloneActivity(original: TaskActivity) {
@@ -41,16 +56,22 @@ function cloneActivity(original: TaskActivity) {
 const showSavedNotification = ref(false)
 const savedConfigJSON = ref('')
 
-function saveTimeline() {
-  const config = {
-    week1: week1Tasks.value,
-    week2: week2Tasks.value
+async function saveTimeline() {
+  try {
+    const config = {
+      week1: week1Tasks.value,
+      week2: week2Tasks.value
+    }
+    await api.post('/admin/journey', config)
+    
+    savedConfigJSON.value = JSON.stringify(config, null, 2)
+    showSavedNotification.value = true
+    setTimeout(() => {
+      showSavedNotification.value = false
+    }, 3500)
+  } catch (e) {
+    console.error('Failed to save timeline configuration', e)
   }
-  savedConfigJSON.value = JSON.stringify(config, null, 2)
-  showSavedNotification.value = true
-  setTimeout(() => {
-    showSavedNotification.value = false
-  }, 3500)
 }
 
 function removeTask(week: 1 | 2, index: number) {

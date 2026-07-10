@@ -21,8 +21,8 @@ const userInitials = computed(() => {
   return name.slice(0, 2).toUpperCase()
 })
 
-function handleLogout() {
-  authStore.clearAuth()
+async function handleLogout() {
+  await authStore.logout()
   router.push('/login')
 }
 

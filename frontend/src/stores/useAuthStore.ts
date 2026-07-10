@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import api from '../services/api'
 
 export interface User {
   id: string
@@ -7,6 +8,7 @@ export interface User {
   email: string
   level?: number
   points?: number
+  tenant_id?: number
 }
 
 export type UserRole = 'admin' | 'employee'
@@ -53,6 +55,34 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('auth_token')
   }
 
+  async function login(emailVal: string, passwordVal: string) {
+    const response = await api.post('/auth/login', {
+      email: emailVal,
+      password: passwordVal
+    })
+    const { token: tokenVal, user: userVal } = response.data
+    setAuth(userVal, userVal.role, tokenVal)
+  }
+
+  async function acceptInvite(passwordVal: string, confirmPasswordVal: string) {
+    const response = await api.post('/auth/invite/accept', {
+      password: passwordVal,
+      password_confirmation: confirmPasswordVal
+    })
+    const { token: tokenVal, user: userVal } = response.data
+    setAuth(userVal, userVal.role, tokenVal)
+  }
+
+  async function logout() {
+    try {
+      await api.post('/auth/logout')
+    } catch (e) {
+      // Ignore network errors on logout
+    } finally {
+      clearAuth()
+    }
+  }
+
   function addPoints(pts: number) {
     if (user.value) {
       const currentPoints = user.value.points || 0
@@ -74,6 +104,9 @@ export const useAuthStore = defineStore('auth', () => {
     isEmployee,
     setAuth,
     clearAuth,
+    login,
+    acceptInvite,
+    logout,
     addPoints
   }
 })
