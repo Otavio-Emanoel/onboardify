@@ -7,7 +7,8 @@ import EmployeeLayout from '../layouts/EmployeeLayout.vue'
 import AdminLayout from '../layouts/AdminLayout.vue'
 
 // Views
-import LoginView from '../views/auth/LoginView.vue'
+import Login from '../views/auth/Login.vue'
+import Invite from '../views/auth/Invite.vue'
 import EmployeeDashboardView from '../views/employee/DashboardView.vue'
 import AdminDashboardView from '../views/admin/DashboardView.vue'
 import AdminEmployeesView from '../views/admin/EmployeesView.vue'
@@ -29,7 +30,12 @@ const router = createRouter({
         {
           path: 'login',
           name: 'login',
-          component: LoginView
+          component: Login
+        },
+        {
+          path: 'invite',
+          name: 'invite',
+          component: Invite
         }
       ]
     },
