@@ -5,6 +5,8 @@ export interface User {
   id: string
   name: string
   email: string
+  level?: number
+  points?: number
 }
 
 export type UserRole = 'admin' | 'employee'
