@@ -12,10 +12,9 @@ import Invite from '../views/auth/Invite.vue'
 import EmployeeDashboard from '../views/employee/Dashboard.vue'
 import JourneyMap from '../views/employee/JourneyMap.vue'
 import TaskExecution from '../views/employee/TaskExecution.vue'
-import AdminDashboardView from '../views/admin/DashboardView.vue'
-import AdminEmployeesView from '../views/admin/EmployeesView.vue'
-import AdminJourneyBuilderView from '../views/admin/JourneyBuilderView.vue'
-import AdminSettingsView from '../views/admin/SettingsView.vue'
+import AdminDashboard from '../views/admin/AdminDashboard.vue'
+import JourneyBuilder from '../views/admin/JourneyBuilder.vue'
+import BrandingSettings from '../views/admin/BrandingSettings.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -77,22 +76,22 @@ const router = createRouter({
         {
           path: 'dashboard',
           name: 'admin-dashboard',
-          component: AdminDashboardView
+          component: AdminDashboard
         },
         {
           path: 'employees',
           name: 'admin-employees',
-          component: AdminEmployeesView
+          component: AdminDashboard
         },
         {
           path: 'journey-builder',
           name: 'admin-journey-builder',
-          component: AdminJourneyBuilderView
+          component: JourneyBuilder
         },
         {
           path: 'settings',
           name: 'admin-settings',
-          component: AdminSettingsView
+          component: BrandingSettings
         }
       ]
     },
