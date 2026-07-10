@@ -9,7 +9,9 @@ import AdminLayout from '../layouts/AdminLayout.vue'
 // Views
 import Login from '../views/auth/Login.vue'
 import Invite from '../views/auth/Invite.vue'
-import EmployeeDashboardView from '../views/employee/DashboardView.vue'
+import EmployeeDashboard from '../views/employee/Dashboard.vue'
+import JourneyMap from '../views/employee/JourneyMap.vue'
+import TaskExecution from '../views/employee/TaskExecution.vue'
 import AdminDashboardView from '../views/admin/DashboardView.vue'
 import AdminEmployeesView from '../views/admin/EmployeesView.vue'
 import AdminJourneyBuilderView from '../views/admin/JourneyBuilderView.vue'
@@ -41,14 +43,24 @@ const router = createRouter({
     },
     // Employee Routes
     {
-      path: '/dashboard',
+      path: '/',
       component: EmployeeLayout,
       meta: { requiresAuth: true, role: 'employee' },
       children: [
         {
-          path: '',
+          path: 'dashboard',
           name: 'employee-dashboard',
-          component: EmployeeDashboardView
+          component: EmployeeDashboard
+        },
+        {
+          path: 'journey',
+          name: 'journey-map',
+          component: JourneyMap
+        },
+        {
+          path: 'task/:id',
+          name: 'task-execution',
+          component: TaskExecution
         }
       ]
     },

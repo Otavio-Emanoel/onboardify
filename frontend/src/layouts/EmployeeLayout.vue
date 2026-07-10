@@ -34,9 +34,16 @@ function handleLogout() {
     <header class="navbar">
       <div class="navbar-container">
         <!-- Brand/Logo -->
-        <div class="brand">
-          <img :src="tenantStore.logoUrl" alt="Tenant Logo" class="brand-logo" />
-          <span class="brand-name">Portal</span>
+        <div class="brand-nav-group">
+          <router-link to="/dashboard" class="brand">
+            <img :src="tenantStore.logoUrl" alt="Tenant Logo" class="brand-logo" />
+            <span class="brand-name">Portal</span>
+          </router-link>
+
+          <nav class="nav-links">
+            <router-link to="/dashboard" class="nav-link" active-class="active">Dashboard</router-link>
+            <router-link to="/journey" class="nav-link" active-class="active">Journey Map</router-link>
+          </nav>
         </div>
 
         <!-- User Info / Stats -->
@@ -113,10 +120,44 @@ function handleLogout() {
   justify-content: space-between;
 }
 
+.brand-nav-group {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
 .brand {
   display: flex;
   align-items: center;
   gap: 12px;
+  text-decoration: none;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.nav-link {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #94a3b8;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+
+.nav-link:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.nav-link.active {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 -2px 0 var(--primary-color);
 }
 
 .brand-logo {

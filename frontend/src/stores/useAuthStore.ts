@@ -53,6 +53,18 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('auth_token')
   }
 
+  function addPoints(pts: number) {
+    if (user.value) {
+      const currentPoints = user.value.points || 0
+      const newPoints = currentPoints + pts
+      user.value.points = newPoints
+      // Every 100 points represents a level up!
+      user.value.level = Math.floor(newPoints / 100) + 1
+
+      localStorage.setItem('auth_user', JSON.stringify(user.value))
+    }
+  }
+
   return {
     user,
     role,
@@ -61,6 +73,7 @@ export const useAuthStore = defineStore('auth', () => {
     isAdmin,
     isEmployee,
     setAuth,
-    clearAuth
+    clearAuth,
+    addPoints
   }
 })
