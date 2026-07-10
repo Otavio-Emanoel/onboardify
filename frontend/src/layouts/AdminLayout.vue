@@ -353,8 +353,7 @@ function toggleSidebar() {
   padding: 40px;
   box-sizing: border-box;
   width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
+  overflow-x: hidden;
 }
 
 /* Collapsed State Styles (Desktop) */

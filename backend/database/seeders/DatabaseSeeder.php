@@ -75,9 +75,9 @@ class DatabaseSeeder extends Seeder
             'duration' => '15 min',
             'pdf_title' => 'developer_setup_guide_v2.pdf',
             'pdf_content_pages' => [
-                'Welcome to the Development Team! \n\n1. Request GitHub Access in the Slack #it-helpdesk channel.',
-                '4. Clone the repository: git clone git@github.com:onboardify/frontend.git',
-                '8. Configure 2FA keys for all administrative logins.'
+                "Welcome to the Development Team!\n\nThis guide will walk you through setting up your development environment step by step.\n\n1. Request GitHub Access\n   Open Slack and post in #it-helpdesk: \"I need GitHub access for my role.\" You will receive an invite email within 2 hours.\n\n2. Install Required Tools\n   - Install VS Code (or your preferred IDE)\n   - Install Node.js v20 LTS from nodejs.org\n   - Install Git for Windows from git-scm.com",
+                "3. Clone the Main Repository\n   Open your terminal and run:\n   git clone git@github.com:onboardify/frontend.git\n\n4. Install Project Dependencies\n   Navigate into the project folder:\n   cd frontend\n   npm install\n\n5. Configure Environment Variables\n   Copy the .env.example file:\n   cp .env.example .env.local\n   Fill in the API_BASE_URL with the value provided by your lead.",
+                "6. Set Up SSH Keys\n   Generate a new SSH key pair:\n   ssh-keygen -t ed25519 -C your@email.com\n   Add the public key to your GitHub account under Settings > SSH Keys.\n\n7. Configure Two-Factor Authentication\n   Enable 2FA on both GitHub and your company Google account. Use an authenticator app (not SMS).\n\n8. Final Check\n   Run the project locally:\n   npm run dev\n   Visit http://localhost:5173 and confirm the app loads.\n\nWelcome aboard! Reach out in #engineering if you have any questions."
             ],
             'order' => 2
         ]);

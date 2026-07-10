@@ -178,8 +178,14 @@ function getInitials(name: string) {
 /* Stats Cards */
 .stats-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+@media (min-width: 1200px) {
+  .stats-row {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 .stat-card {
@@ -292,10 +298,12 @@ function getInitials(name: string) {
 
 .table-responsive {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .employees-table {
   width: 100%;
+  min-width: 700px;
   border-collapse: collapse;
 }
 
@@ -359,10 +367,12 @@ function getInitials(name: string) {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 160px;
 }
 
 .bar-container {
-  width: 120px;
+  flex: 1;
+  min-width: 80px;
   height: 6px;
   background: rgba(255, 255, 255, 0.08);
   border-radius: 9999px;
